@@ -70,11 +70,16 @@ module DataMapper
         class_eval <<-RUBY
 
           def self.update(options={})
-            raise 'TODO'
+            raise "Updating all doesn't work yet"
+#            t_opts = __select_temporal_options__(options)
+#            raise "Can't update at temporal properties from class level yet." if !t_opts.empty?
+#            super.update(options)
           end
 
-          def self.all(*args)
-            raise 'TODO'
+          def self.all(options={})
+            t_opts = __select_temporal_options__(options)
+            raise "Can't select all by temporal properties from class level yet." if !t_opts.empty?             
+            super.all(options)
           end
 
           def self.create(options={})

@@ -52,6 +52,21 @@ describe DataMapper::Is::Temporal do
       subject.instance_eval { puts self.temporal_versions[0].my_model_id.should == self.id}
     end
 
+    it "update all still works for non-temporal properties" do
+      pending
+      MyModel.update(:name => 'all the same')
+
+      subject.name.should == 'all the same'
+    end
+
+    it "select all still works for non-temporal properties" do
+      subject.name = 'looking for me!'
+      subject.save
+      all = MyModel.all(:name => 'looking for me!')
+      all.size.should == 1
+      all[0].name.should == 'looking for me!'
+    end
+
     context "when at context" do
       it "returns old values" do
         subject.foo.should == nil
