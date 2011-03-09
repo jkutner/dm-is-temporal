@@ -63,7 +63,12 @@ Examples
 
     m.name
     #=> 'goodbye'
-    
+
+TODO
+------
+
++  Bi-temporality
+
 
 Copyright
 ----------
