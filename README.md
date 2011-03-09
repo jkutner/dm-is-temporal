@@ -41,26 +41,26 @@ Examples
     #=> 'start'
     
     m.foo = 2
+    m.foo
+    #= 2
     
     m.name = 'hello'
     m.name  
     #=> 'hello'
-    
-    m.foo
-    #= 2
-    
-    m.foo = 42
-        
+
     old = DateTime.parse('-4712-01-01T00:00:00+00:00')
+
     m.at(old).foo
     #=> nil
+
     m.foo
-    #=> 42
+    #=> 2
     
     m.update(:foo => 100, :name => 'goodbye')
     
     m.foo
     #=> 100
+
     m.name
     #=> 'goodbye'
     
