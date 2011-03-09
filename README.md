@@ -5,8 +5,9 @@ DataMapper plugin implementing temporal patterns on DataMapper models.
 
 These patterns are based on research by Martin Fowler, Richard Snodgrass and others.  For more information follow these links:
 
-[Temporal Patterns](http://martinfowler.com/eaaDev/timeNarrative.html)
-[Developing Time-Oriented Database Applications in SQL](http://www.cs.arizona.edu/people/rts/publications.html)
++  [Temporal Patterns](http://martinfowler.com/eaaDev/timeNarrative.html)
+
++  [Developing Time-Oriented Database Applications in SQL](http://www.cs.arizona.edu/people/rts/publications.html)
 
 Examples
 ---------
