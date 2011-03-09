@@ -33,6 +33,12 @@ module DataMapper
         version_model = DataMapper::Model.new
 
         if block_given?
+          version_model.instance_eval <<-RUBY
+            def self.default_repository_name
+              :#{default_repository_name}
+            end
+          RUBY
+
           version_model.property(:id, DataMapper::Property::Serial)
           version_model.property(:updated_at, DataMapper::Property::DateTime)
           version_model.before(:save) { self.updated_at = DateTime.now }
@@ -45,7 +51,7 @@ module DataMapper
 
           has n, :temporal_versions
 
-          create_class_methods
+          create_methods
 
           h.__properties__.each do |a|
             create_temporal_reader(a[0])
@@ -58,19 +64,28 @@ module DataMapper
 
       end
 
-
-      def update(options={})
-        raise 'TODO'
-      end
-
-      def all(*args)
-        raise 'TODO'
-      end
-
       private
 
-      def create_class_methods
+      def create_methods
         class_eval <<-RUBY
+
+          def self.update(options={})
+            raise 'TODO'
+          end
+
+          def self.all(*args)
+            raise 'TODO'
+          end
+
+          def self.create(options={})
+            t_opts = __select_temporal_options__(options)
+            options.delete_if {|k,v| t_opts.keys.include?(k) }
+
+            base = super(options)
+            base.temporal_versions << TemporalVersion.create(t_opts) if t_opts.size > 0
+            base.save
+            base
+          end
 
           def at(context)
             @__at__ = context
@@ -80,21 +95,25 @@ module DataMapper
           def update(options={})
             cur_t = __version_for_context__
             attrs = cur_t.nil? ? {} : cur_t.attributes
-            props = TemporalVersion.properties.map {|p| p.name}
-            temporal_opts = options.
-                select {|k,v| props.include?(k)}.
-                inject({}) {|a,b| a.merge({b[0] => b[1]}) }
-
-            options.delete_if {|k,v| temporal_opts.keys.include?(k) }
+            t_opts = self.class.__select_temporal_options__(options)
+            options.delete_if {|k,v| t_opts.keys.include?(k) }
             super(options)
 
             self.temporal_versions <<
-                TemporalVersion.create(attrs.merge(:id => nil, :updated_at => nil).merge(temporal_opts))
+                TemporalVersion.create(attrs.merge(:id => nil, :updated_at => nil).merge(t_opts))
 
             self.save
           end
 
           private
+
+          def self.__select_temporal_options__(options={})
+            props = TemporalVersion.properties.map {|p| p.name}
+            temporal_opts = options.
+                select {|k,v| props.include?(k)}.
+                inject({}) {|a,b| a.merge({b[0] => b[1]}) }
+            return temporal_opts
+          end
 
           def __version_for_context__(context=DateTime.now)
             @__at__ ||= context
@@ -145,7 +164,7 @@ module DataMapper
           self::TemporalVersion.auto_upgrade!
         end
 
-      end # Migration
+      end 
     end
   end
 end
