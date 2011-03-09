@@ -47,6 +47,11 @@ describe DataMapper::Is::Temporal do
       MyModel.create
     end
 
+    it "version has the right parent" do
+      subject.foo = 42
+      subject.instance_eval { puts self.temporal_versions[0].my_model_id.should == self.id}
+    end
+
     context "when at context" do
       it "returns old values" do
         subject.foo.should == nil

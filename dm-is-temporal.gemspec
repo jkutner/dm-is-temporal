@@ -17,7 +17,6 @@ Gem::Specification.new do |s|
     "README.md"
   ]
   s.files = [
-    "Gemfile",
     "LICENSE.txt",
     "README.md",
     "Rakefile",
