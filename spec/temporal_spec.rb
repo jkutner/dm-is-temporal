@@ -67,6 +67,15 @@ describe DataMapper::Is::Temporal do
         subject.foo = 42
         subject.foo.should == 42
       end
+
+      it "returns 'same' for bar" do
+        subject.bar = 'same'
+        subject.bar.should == 'same'
+        subject.foo.should == nil
+        subject.foo = 42
+        subject.foo.should == 42
+        subject.bar.should == 'same'
+      end
     end
 
     context "when bar is 'hello'" do
