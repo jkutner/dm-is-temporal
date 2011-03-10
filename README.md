@@ -6,7 +6,6 @@ DataMapper plugin implementing temporal patterns on DataMapper models.
 These patterns are based on research by Martin Fowler, Richard Snodgrass and others.  For more information follow these links:
 
 +  [Temporal Patterns](http://martinfowler.com/eaaDev/timeNarrative.html)
-
 +  [Developing Time-Oriented Database Applications in SQL](http://www.cs.arizona.edu/people/rts/publications.html)
 
 Examples
@@ -84,12 +83,12 @@ these two tables would be created:
 
 
     # db.my_model_temporal_versions table
-    ---------------------------------------------------------------------------------------
-    | id | foo               | bar                       | updated_at |
-    ---------------------------------------------------------------------------------------
-    | 1  | '42'               | null                     | DateTime   |
-    | 2  | '1024'             | null                     | DateTime   |
-    | 3  | '1024'             | 'hello'                  | DateTime   |
+    -----------------------------------------------------------------------
+    | id | foo          | bar            | updated_at     | my_model_id   |
+    -----------------------------------------------------------------------
+    | 1  | '42'         | null           | DateTime       | 1             |
+    | 2  | '1024'       | null           | DateTime       | 1             |
+    | 3  | '1024'       | 'hello'        | DateTime       | 1             |
 
 Thanks
 ------
