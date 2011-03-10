@@ -75,19 +75,19 @@ When you use the `is_temporal` form, the plugin will dynamically create a tempor
 these two tables would be created:
 
     # db.my_models table
-  ---------------------------------------------
-  | id | name                                 |
-  ---------------------------------------------
-  | 1  | 'start'                              |
+    ---------------------------------------------
+    | id | name                                 |
+    ---------------------------------------------
+    | 1  | 'start'                              |
 
 
-  # db.my_model_temporal_versions table
-  ---------------------------------------------------------------------------------------
-  | id | foo               | bar                       | updated_at |
-  ---------------------------------------------------------------------------------------
-  | 1  | '42'               | null                     | DateTime   |
-  | 1  | '1024'             | null                     | DateTime   |
-  | 1  | '1024'             | null                     | DateTime   |
+    # db.my_model_temporal_versions table
+    ---------------------------------------------------------------------------------------
+    | id | foo               | bar                       | updated_at |
+    ---------------------------------------------------------------------------------------
+    | 1  | '42'               | null                     | DateTime   |
+    | 1  | '1024'             | null                     | DateTime   |
+    | 1  | '1024'             | null                     | DateTime   |
 
 Thanks
 ------
