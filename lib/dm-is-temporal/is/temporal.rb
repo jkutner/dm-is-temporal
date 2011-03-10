@@ -41,7 +41,7 @@ module DataMapper
 
           version_model.property(:id, DataMapper::Property::Serial)
           version_model.property(:updated_at, DataMapper::Property::DateTime)
-          version_model.before(:save) { self.updated_at = DateTime.now }
+          version_model.before(:save) { self.updated_at ||= DateTime.now }
           version_model.instance_eval(&block)
 
           const_set(:TemporalVersion, version_model)
@@ -146,9 +146,13 @@ module DataMapper
       def create_temporal_writer(name)
         class_eval <<-RUBY
           def #{name}=(x)
+            at = @__at__
             t = __version_for_context__
-            attrs = t.nil? ? {} : t.attributes
-            t = TemporalVersion.create(attrs.merge(:id => nil, :updated_at => nil))
+            if t.nil?
+              t = TemporalVersion.create(:updated_at => at)
+            elsif t.updated_at != at
+              t = TemporalVersion.create(t.attributes.merge(:id => nil, :updated_at => at))
+            end
             temporal_versions << t
             t.#{name} = x
             self.save

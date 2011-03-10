@@ -4,10 +4,6 @@ require 'spec_helper'
 class MyModel
   include DataMapper::Resource
 
-#  def self.default_repository_name
-#    :test
-#  end
-
   property :id, Serial
   property :name, String
 
@@ -45,6 +41,42 @@ describe DataMapper::Is::Temporal do
 
     subject do
       MyModel.create
+    end
+
+    it "setting at different times works" do
+      oldish = DateTime.parse('-4712-01-01T00:00:00+00:00')
+      nowish = DateTime.parse('2011-03-01T00:00:00+00:00')
+      future = DateTime.parse('4712-01-01T00:00:00+00:00')
+
+      subject.at(oldish).foo = 42
+
+      subject.at(oldish).foo.should == 42
+      subject.at(nowish).foo.should == 42
+      subject.at(future).foo.should == 42
+
+      subject.at(nowish).foo = 1024
+
+      subject.at(oldish).foo.should == 42
+      subject.at(nowish).foo.should == 1024
+      subject.at(future).foo.should == 1024
+
+      subject.at(future).foo = 3
+
+      subject.at(oldish).foo.should == 42
+      subject.at(nowish).foo.should == 1024
+      subject.at(future).foo.should == 3
+
+      subject.instance_eval { puts self.temporal_versions.size.should == 3}
+    end
+
+    it "rewriting times works" do
+      now = DateTime.parse('2011-03-01T00:00:00+00:00')
+
+      subject.at(now).foo = 42
+      subject.at(now).foo.should == 42
+
+      subject.at(now).foo = 1
+      subject.at(now).foo.should == 1
     end
 
     it "version has the right parent" do
