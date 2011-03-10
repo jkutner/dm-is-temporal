@@ -86,8 +86,8 @@ these two tables would be created:
     | id | foo               | bar                       | updated_at |
     ---------------------------------------------------------------------------------------
     | 1  | '42'               | null                     | DateTime   |
-    | 1  | '1024'             | null                     | DateTime   |
-    | 1  | '1024'             | null                     | DateTime   |
+    | 2  | '1024'             | null                     | DateTime   |
+    | 3  | '1024'             | null                     | DateTime   |
 
 Thanks
 ------
