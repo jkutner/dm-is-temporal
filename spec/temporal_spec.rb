@@ -78,6 +78,12 @@ describe DataMapper::Is::Temporal do
 
         subject.at(old).foo.should == nil
         subject.at(now).foo.should == 42
+
+        subject.foo = 1024
+        subject.foo.should == 1024
+
+        subject.at(old).foo.should == nil
+        subject.at(now).foo.should == 42
       end
     end
 
