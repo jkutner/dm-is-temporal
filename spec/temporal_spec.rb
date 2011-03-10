@@ -43,42 +43,6 @@ describe DataMapper::Is::Temporal do
       MyModel.create
     end
 
-    it "setting at different times works" do
-      oldish = DateTime.parse('-4712-01-01T00:00:00+00:00')
-      nowish = DateTime.parse('2011-03-01T00:00:00+00:00')
-      future = DateTime.parse('4712-01-01T00:00:00+00:00')
-
-      subject.at(oldish).foo = 42
-
-      subject.at(oldish).foo.should == 42
-      subject.at(nowish).foo.should == 42
-      subject.at(future).foo.should == 42
-
-      subject.at(nowish).foo = 1024
-
-      subject.at(oldish).foo.should == 42
-      subject.at(nowish).foo.should == 1024
-      subject.at(future).foo.should == 1024
-
-      subject.at(future).foo = 3
-
-      subject.at(oldish).foo.should == 42
-      subject.at(nowish).foo.should == 1024
-      subject.at(future).foo.should == 3
-
-      subject.instance_eval { puts self.temporal_versions.size.should == 3}
-    end
-
-    it "rewriting times works" do
-      now = DateTime.parse('2011-03-01T00:00:00+00:00')
-
-      subject.at(now).foo = 42
-      subject.at(now).foo.should == 42
-
-      subject.at(now).foo = 1
-      subject.at(now).foo.should == 1
-    end
-
     it "version has the right parent" do
       subject.foo = 42
       subject.instance_eval { puts self.temporal_versions[0].my_model_id.should == self.id}
@@ -97,6 +61,78 @@ describe DataMapper::Is::Temporal do
       all = MyModel.all(:name => 'looking for me!')
       all.size.should == 1
       all[0].name.should == 'looking for me!'
+    end
+
+    context "non-temporal properties" do
+      it "should work as normal" do
+        subject.name = 'foo'
+        subject.name.should == 'foo'
+
+        subject.name = 'bar'
+        subject.name.should == 'bar'
+      end
+
+      it "should work when accessed via at(time)" do
+        oldish = DateTime.parse('-4712-01-01T00:00:00+00:00')
+        nowish = DateTime.parse('2011-03-01T00:00:00+00:00')
+        future = DateTime.parse('4712-01-01T00:00:00+00:00')
+
+        subject.at(oldish).name = 'foo'
+
+        subject.at(oldish).name.should == 'foo'
+        subject.at(nowish).name.should == 'foo'
+        subject.at(future).name.should == 'foo'
+
+        subject.at(nowish).name = 'bar'
+
+        subject.at(oldish).name.should == 'bar'
+        subject.at(nowish).name.should == 'bar'
+        subject.at(future).name.should == 'bar'
+
+        subject.name = 'rat'
+
+        subject.at(oldish).name.should == 'rat'
+        subject.at(nowish).name.should == 'rat'
+        subject.at(future).name.should == 'rat'    
+      end
+    end
+
+    context "setting temporal properties" do
+      it "works" do
+        oldish = DateTime.parse('-4712-01-01T00:00:00+00:00')
+        nowish = DateTime.parse('2011-03-01T00:00:00+00:00')
+        future = DateTime.parse('4712-01-01T00:00:00+00:00')
+
+        subject.at(oldish).foo = 42
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 42
+        subject.at(future).foo.should == 42
+
+        subject.at(nowish).foo = 1024
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 1024
+        subject.at(future).foo.should == 1024
+
+        subject.at(future).foo = 3
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 1024
+        subject.at(future).foo.should == 3
+
+        subject.instance_eval { puts self.temporal_versions.size.should == 3}
+      end
+
+      it "and rewriting works" do
+        now = DateTime.parse('2011-03-01T00:00:00+00:00')
+
+        subject.at(now).foo = 42
+        subject.at(now).foo.should == 42
+
+        subject.at(now).foo = 1
+        subject.at(now).foo.should == 1
+      end
     end
 
     context "when at context" do

@@ -42,7 +42,7 @@ You can create, modify and access it as normal:
     m.foo              #= 42
     m.name             #=> 'start'
 
-Or you can access it at different time (future or past):
+Or you can access it at different times (future or past):
 
     old = DateTime.parse('-4712-01-01T00:00:00+00:00')
     now = DateTime.now
@@ -76,11 +76,10 @@ But it really gets interesting when you modify it `at` different `DateTime`s
 
 Remember that properties outside of the `is_temporal` block are not versioned.  But you can read and write them though the `at(time)` method if you want:
 
-    # .name isn't temporal
-    m.at(old).name
-    #=> 'start'
-    m.at(now).name
-    #=> 'start'
+    m.at(now).name = "finished"
+
+    m.at(old).name        #=> 'finished'
+    m.at(now).name        #=> 'finished'
 
 If you try to set a value at the same time as one you already set, it will overwrite the previous value (like non-temporal models).  In future versions of dm-is-temporal you will be able to configure if this works or causes an error.
 
