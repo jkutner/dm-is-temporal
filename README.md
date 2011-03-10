@@ -58,6 +58,8 @@ Examples
     m.at(now).foo
     #=> 42
 
+    m.bar = 'hello'
+
     # .name isn't temporal
     m.at(old).name
     #=> 'start'
@@ -87,7 +89,7 @@ these two tables would be created:
     ---------------------------------------------------------------------------------------
     | 1  | '42'               | null                     | DateTime   |
     | 2  | '1024'             | null                     | DateTime   |
-    | 3  | '1024'             | null                     | DateTime   |
+    | 3  | '1024'             | 'hello'                  | DateTime   |
 
 Thanks
 ------
