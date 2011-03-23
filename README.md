@@ -89,6 +89,17 @@ If you try to set a value at the same time as one you already set, it will overw
     m.at(nowish).foo = 22
     m.at(nowish).foo         #=> 22
 
+You can also update several properties with the same time in a block (I use `v` for "version" here)
+
+
+    m.at(nowish) do |v|
+      v.foo = 42
+      v.bar = "cat"
+    end
+
+    m.at(nowish).foo           #=> 42
+    m.at(nowish).bar           #=> 'cat'
+
 
 How it works
 -------------

@@ -269,5 +269,142 @@ describe DataMapper::Is::Temporal do
         end
       end
     end
+
+    context "when multi setting" do
+      it "works with different times" do
+        oldish = DateTime.parse('-4712-01-01T00:00:00+00:00')
+        nowish = DateTime.parse('2011-03-01T00:00:00+00:00')
+        future = DateTime.parse('4712-01-01T00:00:00+00:00')
+
+        subject.at(oldish) do |s|
+          s.foo = 42
+          s.bar = "cat"
+        end
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 42
+        subject.at(future).foo.should == 42
+
+        subject.at(oldish).bar.should == "cat"
+        subject.at(nowish).bar.should == "cat"
+        subject.at(future).bar.should == "cat"
+
+        subject.at(nowish) do |s|
+          s.foo = 1024
+          s.bar = "dog"
+        end
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 1024
+        subject.at(future).foo.should == 1024
+
+        subject.at(oldish).bar.should == "cat"
+        subject.at(nowish).bar.should == "dog"
+        subject.at(future).bar.should == "dog"
+
+        subject.at(future) do |s|
+          s.foo = 3
+          s.bar = "rat"
+        end
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 1024
+        subject.at(future).foo.should == 3
+
+        subject.at(oldish).bar.should == "cat"
+        subject.at(nowish).bar.should == "dog"
+        subject.at(future).bar.should == "rat"
+
+        subject.instance_eval { puts self.temporal_versions.size.should == 3}
+      end
+
+      it "works with different times and non-temporal properties" do
+        oldish = DateTime.parse('-4712-01-01T00:00:00+00:00')
+        nowish = DateTime.parse('2011-03-01T00:00:00+00:00')
+        future = DateTime.parse('4712-01-01T00:00:00+00:00')
+
+        subject.at(oldish) do |s|
+          s.name = "same"
+          s.foo = 42
+          s.bar = "cat"
+        end
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 42
+        subject.at(future).foo.should == 42
+
+        subject.at(oldish).bar.should == "cat"
+        subject.at(nowish).bar.should == "cat"
+        subject.at(future).bar.should == "cat"
+
+        subject.at(oldish).name.should == "same"
+        subject.at(nowish).name.should == "same"
+        subject.at(future).name.should == "same"
+
+        subject.at(nowish) do |s|
+          s.name = "every"
+          s.foo = 1024
+          s.bar = "dog"
+        end
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 1024
+        subject.at(future).foo.should == 1024
+
+        subject.at(oldish).bar.should == "cat"
+        subject.at(nowish).bar.should == "dog"
+        subject.at(future).bar.should == "dog"
+
+        subject.at(oldish).name.should == "every"
+        subject.at(nowish).name.should == "every"
+        subject.at(future).name.should == "every"
+
+        subject.at(future) do |s|
+          s.name = "time"
+          s.foo = 3
+          s.bar = "rat"
+        end
+
+        subject.at(oldish).foo.should == 42
+        subject.at(nowish).foo.should == 1024
+        subject.at(future).foo.should == 3
+
+        subject.at(oldish).bar.should == "cat"
+        subject.at(nowish).bar.should == "dog"
+        subject.at(future).bar.should == "rat"
+
+        subject.at(oldish).name.should == "time"
+        subject.at(nowish).name.should == "time"
+        subject.at(future).name.should == "time"
+
+        subject.instance_eval { puts self.temporal_versions.size.should == 3}
+      end
+
+      it "works with no time (i.e. now)" do
+        subject.at do |s|
+          s.foo = 42
+          s.bar = "cat"
+        end
+
+        subject.foo.should == 42
+        subject.bar.should == "cat"
+
+        subject.instance_eval { puts self.temporal_versions.size.should == 1}
+      end
+
+      it "works with no time (i.e. now)" do
+        subject.at do |s|
+          s.name = "foobar"
+          s.foo = 42
+          s.bar = "cat"
+        end
+
+        subject.foo.should == 42
+        subject.bar.should == "cat"
+        subject.name.should == "foobar"
+
+        subject.instance_eval { puts self.temporal_versions.size.should == 1}
+      end
+    end
   end
 end

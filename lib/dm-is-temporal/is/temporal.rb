@@ -92,8 +92,13 @@ module DataMapper
             base
           end
 
-          def at(context)
-            @__at__ = context
+          def at(context=DateTime.now, &block)
+            if block_given?
+              yield TemporalProxy.new(self, context)
+            else
+              # this is hokie.  need to do better
+              @__at__ = context
+            end
             self
           end
 
@@ -150,15 +155,30 @@ module DataMapper
             t = __version_for_context__
             if t.nil?
               t = TemporalVersion.create(:updated_at => at)
+              temporal_versions << t
             elsif t.updated_at != at
               t = TemporalVersion.create(t.attributes.merge(:id => nil, :updated_at => at))
+              temporal_versions << t
             end
-            temporal_versions << t
             t.#{name} = x
             self.save
             #{name}
           end
         RUBY
+      end
+
+      class TemporalProxy
+        # make this a blank slate
+        instance_methods.each { |m| undef_method m unless m =~ /^__/ }
+
+        def initialize(proxied_object, context)
+          @proxied_object = proxied_object
+          @context = context
+        end
+
+        def method_missing(sym, *args, &block)
+          @proxied_object.at(@context).__send__(sym, *args, &block)
+        end
       end
 
       module Migration
