@@ -7,10 +7,20 @@ module DataMapper
         def initialize(base)
           @__properties__ = []
           @__base__ = base
+          @__before__ = []
+          @__after__ = []
         end
 
         def property(*args)
           @__properties__ << args
+        end
+
+        def before(*args, &block)
+          @__before__ << [args, block]
+        end
+
+        def after(*args, &block)
+          @__after__ << [args, block]
         end
 
         def has(*args)
