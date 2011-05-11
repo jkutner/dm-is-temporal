@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{dm-is-temporal}
-  s.version = "0.2.0"
+  s.version = "0.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Joe Kutner"]
-  s.date = %q{2011-03-22}
+  s.date = %q{2011-04-11}
   s.description = %q{DataMapper plugin implementing temporal patterns}
   s.email = %q{jpkutner [a] gmail [d] com}
   s.extra_rdoc_files = [
@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
     "VERSION",
     "lib/dm-is-temporal.rb",
     "lib/dm-is-temporal/is/temporal.rb",
+    "spec/hooks_spec.rb",
     "spec/spec.opts",
     "spec/spec_helper.rb",
     "spec/temporal_spec.rb"
@@ -32,6 +33,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.6}
   s.summary = %q{DataMapper plugin implementing temporal patterns}
   s.test_files = [
+    "spec/hooks_spec.rb",
     "spec/spec_helper.rb",
     "spec/temporal_spec.rb"
   ]
