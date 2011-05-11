@@ -1,34 +1,36 @@
 require 'spec_helper'
 
-class Foobar
-  include DataMapper::Resource
+module Assoc
+  class Foobar
+    include DataMapper::Resource
 
-  property :id, Serial
-  property :baz, String
+    property :id, Serial
+    property :baz, String
 
-  # todo
-#  belongs_to :my_model
-end
-
-class MyModel
-  include DataMapper::Resource
-
-  property :id, Serial
-  property :name, String
-
-  is_temporal do
-    has n, :foobars
+    # todo bi-direction temporal relationships
+  #  belongs_to :my_model
   end
-end
 
-class MyModelTwo
-  include DataMapper::Resource
+  class MyModel
+    include DataMapper::Resource
 
-  property :id, Serial
-  property :name, String
+    property :id, Serial
+    property :name, String
 
-  is_temporal do
-    has n, :foobazes, '::Foobar'
+    is_temporal do
+      has n, :foobars
+    end
+  end
+
+  class MyModelTwo
+    include DataMapper::Resource
+
+    property :id, Serial
+    property :name, String
+
+    is_temporal do
+      has n, :foobazes, 'Foobar'
+    end
   end
 end
 
@@ -36,7 +38,10 @@ describe DataMapper::Is::Temporal do
 
   before(:all) do
     DataMapper.setup(:default, "sqlite3::memory:")
-    DataMapper.finalize
+    DataMapper.setup(:test, "sqlite3::memory:")
+  end
+  
+  before(:each) do
     DataMapper.auto_migrate!
   end
 
@@ -44,89 +49,97 @@ describe DataMapper::Is::Temporal do
 
     context "with defaults" do
       subject do
-        MyModel.create
+        Assoc::MyModel.create
       end
 
       it "adds a Foobar at the current time" do
-        subject.foobars << Foobar.create(:baz => "hello")
+        f = Assoc::Foobar.create(:baz => "hello")
+        subject.foobars << f
         subject.save
         subject.foobars.size.should == 1
+        subject.foobars.should include(f)
 
-        subject.instance_eval { self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_foobars.size.should == 1}
       end
 
       it "adds a couple Foobars at different times" do
         old = DateTime.parse('-4712-01-01T00:00:00+00:00')
         now = DateTime.parse('2011-03-01T00:00:00+00:00')
 
-        subject.at(old).foobars << Foobar.create(:baz => "hello")
+        subject.at(old).foobars << f1 = Assoc::Foobar.create(:baz => "hello")
         subject.save
         subject.at(old).foobars.size.should == 1
 
-        subject.instance_eval { self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_foobars.size.should == 1}
 
-        subject.at(now).foobars << Foobar.create(:baz => "goodbye")
+        subject.at(now).foobars << f2 = Assoc::Foobar.create(:baz => "goodbye")
         subject.save
         subject.at(now).foobars.size.should == 2
 
-        subject.instance_eval { self.temporal_versions.size.should == 2}
+        subject.instance_eval { self.temporal_foobars.size.should == 2}
+
+        subject.foobars.should include(f1, f2)
       end
 
       it "adds a couple Foobars at the same time" do
         now = DateTime.parse('2011-03-01T00:00:00+00:00')
 
         subject.at(now) do |m|
-          m.foobars << Foobar.create(:baz => "hello")
-          m.foobars << Foobar.create(:baz => "goodbye")
+          m.foobars << Assoc::Foobar.create(:baz => "hello")
+          m.foobars << Assoc::Foobar.create(:baz => "goodbye")
         end
         subject.save
 
         subject.at(now).foobars.size.should == 2
-        subject.instance_eval { self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_foobars.size.should == 2}
       end
     end
 
     context "with explicit class" do
       subject do
-        MyModelTwo.create
+        Assoc::MyModelTwo.create
       end
 
       it "adds a Foobar at the current time" do
-        subject.foobazes << Foobar.create(:baz => "hello")
+        f = Assoc::Foobar.create(:baz => "hello")
+        subject.foobazes << f
         subject.save
         subject.foobazes.size.should == 1
+        subject.foobazes.should include(f)
 
-        subject.instance_eval { self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_foobazes.size.should == 1}
       end
 
       it "adds a couple Foobars at different times" do
         old = DateTime.parse('-4712-01-01T00:00:00+00:00')
         now = DateTime.parse('2011-03-01T00:00:00+00:00')
 
-        subject.at(old).foobazes << Foobar.create(:baz => "hello")
+        subject.at(old).foobazes << f1 = Assoc::Foobar.create(:baz => "hello")
         subject.save
         subject.at(old).foobazes.size.should == 1
 
-        subject.instance_eval { self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_foobazes.size.should == 1}
 
-        subject.at(now).foobazes << Foobar.create(:baz => "goodbye")
+        subject.at(now).foobazes << f2 = Assoc::Foobar.create(:baz => "goodbye")
         subject.save
         subject.at(now).foobazes.size.should == 2
 
-        subject.instance_eval { self.temporal_versions.size.should == 2}
+        subject.instance_eval { self.temporal_foobazes.size.should == 2}
+
+        subject.foobazes.should include(f1, f2)
       end
 
       it "adds a couple Foobars at the same time" do
         now = DateTime.parse('2011-03-01T00:00:00+00:00')
 
         subject.at(now) do |m|
-          m.foobazes << Foobar.create(:baz => "hello")
-          m.foobazes << Foobar.create(:baz => "goodbye")
+          m.foobazes << Assoc::Foobar.create(:baz => "hello")
+          m.foobazes << Assoc::Foobar.create(:baz => "goodbye")
         end
         subject.save
 
         subject.at(now).foobazes.size.should == 2
-        subject.instance_eval { self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_foobazes.size.should == 2}
       end
     end
   end

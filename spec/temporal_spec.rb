@@ -33,6 +33,9 @@ describe DataMapper::Is::Temporal do
   before(:all) do
     DataMapper.setup(:default, "sqlite3::memory:")
     DataMapper.setup(:test, "sqlite3::memory:")
+  end
+
+  before(:each) do
     DataMapper.auto_migrate!(:default)
     DataMapper.auto_migrate!(:test)
   end
@@ -45,7 +48,7 @@ describe DataMapper::Is::Temporal do
 
     it "version has the right parent" do
       subject.foo = 42
-      subject.instance_eval { puts self.temporal_versions[0].my_model_id.should == self.id}
+      subject.instance_eval { self.temporal_versions[0].my_model_id.should == self.id}
     end
 
     it "update all still works for non-temporal properties" do
@@ -121,7 +124,7 @@ describe DataMapper::Is::Temporal do
         subject.at(nowish).foo.should == 1024
         subject.at(future).foo.should == 3
 
-        subject.instance_eval { puts self.temporal_versions.size.should == 3}
+        subject.instance_eval { self.temporal_versions.size.should == 3}
       end
 
       it "and rewriting works" do
@@ -315,7 +318,7 @@ describe DataMapper::Is::Temporal do
         subject.at(nowish).bar.should == "dog"
         subject.at(future).bar.should == "rat"
 
-        subject.instance_eval { puts self.temporal_versions.size.should == 3}
+        subject.instance_eval { self.temporal_versions.size.should == 3}
       end
 
       it "works with different times and non-temporal properties" do
@@ -377,7 +380,7 @@ describe DataMapper::Is::Temporal do
         subject.at(nowish).name.should == "time"
         subject.at(future).name.should == "time"
 
-        subject.instance_eval { puts self.temporal_versions.size.should == 3}
+        subject.instance_eval { self.temporal_versions.size.should == 3}
       end
 
       it "works with no time (i.e. now)" do
@@ -389,7 +392,7 @@ describe DataMapper::Is::Temporal do
         subject.foo.should == 42
         subject.bar.should == "cat"
 
-        subject.instance_eval { puts self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_versions.size.should == 1}
       end
 
       it "works with no time (i.e. now)" do
@@ -403,7 +406,7 @@ describe DataMapper::Is::Temporal do
         subject.bar.should == "cat"
         subject.name.should == "foobar"
 
-        subject.instance_eval { puts self.temporal_versions.size.should == 1}
+        subject.instance_eval { self.temporal_versions.size.should == 1}
       end
     end
   end

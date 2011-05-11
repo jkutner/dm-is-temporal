@@ -1,22 +1,23 @@
 require 'spec_helper'
 
+module Hooks
+  class MyModel
+    include DataMapper::Resource
 
-class MyModel
-  include DataMapper::Resource
+    property :id, Serial
+    property :name, String
 
-  property :id, Serial
-  property :name, String
+    is_temporal do
+      property :foo, Integer
+      property :bar, String
 
-  is_temporal do
-    property :foo, Integer
-    property :bar, String
+      before(:save) do |m|
+        m.foo = 42
+      end
 
-    before(:save) do |m|
-      m.foo = 42
-    end
-
-    after(:create) do |m|
-      m.bar = 'hello'
+      after(:create) do |m|
+        m.bar = 'hello'
+      end
     end
   end
 end
@@ -26,13 +27,16 @@ describe DataMapper::Is::Temporal do
   before(:all) do
     DataMapper.setup(:default, "sqlite3::memory:")
     DataMapper.setup(:test, "sqlite3::memory:")
+  end
+  
+  before  (:each) do
     DataMapper.auto_migrate!
   end
 
   describe "#before" do
 
     subject do
-      MyModel.create
+      Hooks::MyModel.create
     end
 
     it "before hook sets foo to 42" do
@@ -56,14 +60,14 @@ describe DataMapper::Is::Temporal do
       subject.save
       subject.at(oldish).bar.should == 'hello'
 
-      subject.instance_eval { puts self.temporal_versions.size.should == 1}
+      subject.instance_eval { self.temporal_versions.size.should == 1}
 
       subject.at(nowish).bar = 'quack'
       subject.save
       subject.at(nowish).bar.should == 'quack'
       subject.at(oldish).bar.should == 'hello'
 
-      subject.instance_eval { puts self.temporal_versions.size.should == 2}
+      subject.instance_eval { self.temporal_versions.size.should == 2}
     end
   end
 end

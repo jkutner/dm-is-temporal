@@ -48,11 +48,22 @@ module DataMapper
         end
       end
 
+      @@__temporal_classes__ = []
+
+      def __temporal_classes__
+        @@__temporal_classes__
+      end
+      protected :__temporal_classes__
+
       def is_temporal(*args, &block)
 
         extend(Migration) if respond_to?(:auto_migrate!)
 
-        version_model = DataMapper::Model.new
+        version_model = DataMapper::Model.new do
+          def has(*args)
+            #ignore all
+          end
+        end
 
         if block_given?
           version_model.instance_eval <<-RUBY
@@ -67,11 +78,12 @@ module DataMapper
           version_model.instance_eval(&block)
 
           const_set(:TemporalVersion, version_model)
+          @@__temporal_classes__ << self::TemporalVersion
 
           h = PropertyHelper.new(self)
           h.instance_eval(&block)
 
-          has n, :temporal_versions
+          has n, :temporal_versions #, :accessor => :protected
 
           create_methods
 
@@ -80,12 +92,47 @@ module DataMapper
             create_temporal_writer(a[0])
           end
 
+
           h.__has__.each do |a|
-            create_temporal_list_reader(a[1])
-            create_temporal_writer(a[1])
+            has_args = a[2]
+            plural_name = a[1]
+
+            if has_args.any? and has_args[0].is_a?(String)
+              clazz = has_args[0]
+              table = DataMapper::Inflector.tableize(clazz)
+              singular_name = DataMapper::Inflector.singularize(table)
+            else
+              singular_name = DataMapper::Inflector.singularize(plural_name.to_s)
+            end
+
+
+            list_model = DataMapper::Model.new
+
+            list_model.instance_eval <<-RUBY
+              def self.default_repository_name
+                :#{default_repository_name}
+              end
+            RUBY
+
+            list_model.property(:id, DataMapper::Property::Serial)
+            list_model.property(:updated_at, DataMapper::Property::DateTime)
+            list_model.property(:deleted_at, DataMapper::Property::DateTime)
+            list_model.before(:save) { self.updated_at ||= DateTime.now }
+            list_model.belongs_to singular_name #, :accessor => :protected
+
+            temporal_list_name = "temporal_#{plural_name}".to_sym
+
+            list_model_name = Inflector.classify("temporal_#{singular_name}")
+
+            const_set(list_model_name.to_sym, list_model)
+            @@__temporal_classes__ << eval("self::#{list_model_name}")
+
+            has n, temporal_list_name, list_model_name
+
+            create_temporal_list_reader(plural_name, singular_name, temporal_list_name, list_model_name)
+#            create_temporal_list_writer(a[1], temporal_list)
           end
         else
-          # const_set(:TemporalVersion + args[0], version_model)
           raise "Temporal Property pattern not supported yet"
         end
 
@@ -163,6 +210,15 @@ module DataMapper
             @__at__ = nil
             t
           end
+
+          def __versions_for_context__(temporal_list_name, context=DateTime.now)
+            @__at__ ||= context
+            t = self.__send__(temporal_list_name).select do |n|
+              (t.nil? or n.updated_at > t.updated_at) and n.updated_at <= @__at__
+            end
+            @__at__ = nil
+            t
+          end
         RUBY
       end
 
@@ -194,16 +250,42 @@ module DataMapper
         RUBY
       end
 
-      def create_temporal_list_reader(name)
+      def create_temporal_list_reader(plural_name, singular_name, temporal_list_name, temporal_list_model)
         class_eval <<-RUBY
-          def #{name}(context=DateTime.now)
+          def #{plural_name}(context=DateTime.now)
             at = @__at__
             at ||= context
-            t = __version_for_context__(context)
-            t.nil? ? TemporalListProxy.new(self, [], #{name.to_sym.inspect}, at) : TemporalListProxy.new(self, t.#{name}, #{name.to_sym.inspect}, at)
+            versions = __versions_for_context__(#{temporal_list_name.inspect}, context)
+            TemporalListProxy.new(
+              self,
+              versions.map {|v| v.#{singular_name}},
+              #{temporal_list_model},
+              #{temporal_list_name.to_sym.inspect},
+              #{singular_name.to_sym.inspect},
+              at)
           end
         RUBY
       end
+#
+#      def create_temporal_list_writer(name, private_name)
+#        class_eval <<-RUBY
+#          def #{name}=(x)
+#            at = @__at__
+#            versions = __versions_for_context__
+#            versions.each do
+#            if t.nil?
+#              t = TemporalVersion.create(:updated_at => at)
+#              temporal_versions << t
+#            elsif t.updated_at != at
+#              t = TemporalVersion.create(t.attributes.merge(:id => nil, :updated_at => at))
+#              temporal_versions << t
+#            end
+#            t.#{name} = x
+#            self.save
+#            x
+#          end
+#        RUBY
+#      end
 
       class TemporalProxy
         # make this a blank slate
@@ -223,21 +305,22 @@ module DataMapper
         # make this a blank slate
         instance_methods.each { |m| undef_method m unless m =~ /^__/ }
 
-        def initialize(base, list, method_name, context)
-          @base = base
-          @context = context
-          @method_name = method_name
+        def initialize(base_object, list, temporal_list_model, temporal_list_name, name, context)
+          @base_object = base_object
           @list = list
+          @temporal_list_name = temporal_list_name
+          @temporal_list_model = temporal_list_model
+          @name = name
+          @context = context
         end
 
         def <<(x)
-          new_list = @list.dup
-          new_list << x
-          set new_list
+          new_model = @temporal_list_model.create(:updated_at => @context, @name => x)
+          @base_object.send(@temporal_list_name) << new_model
         end
 
         def clear
-          set []
+          raise "Unsupported method"
         end
 
         def []=(x,y)
@@ -327,27 +410,25 @@ module DataMapper
         def method_missing(sym, *args, &block)
           @list.__send__(sym, *args, &block)
         end
-
-        private
-
-        def set(val)
-          @base.at(@context).__send__("#{@method_name}=", val)
-        end
       end
 
       module Migration
 
         def auto_migrate!(repository_name = self.repository_name)
-          super
-          self::TemporalVersion.auto_migrate!
+          super(repository_name)
+          self::__temporal_classes__.each do |t|
+            t.auto_migrate!
+          end
         end
 
         def auto_upgrade!(repository_name = self.repository_name)
-          super
-          self::TemporalVersion.auto_upgrade!
+          super(repository_name)
+          self::__temporal_classes__.each do |t|
+            t.auto_upgrade!
+          end
         end
 
-      end 
+      end
     end
   end
 end
