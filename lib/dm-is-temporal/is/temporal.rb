@@ -205,10 +205,6 @@ module DataMapper
         RUBY
       end
 
-#      def create_temporal_list_writer(name)
-#
-#      end
-
       class TemporalProxy
         # make this a blank slate
         instance_methods.each { |m| undef_method m unless m =~ /^__/ }

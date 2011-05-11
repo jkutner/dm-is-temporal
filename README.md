@@ -105,7 +105,8 @@ How it works
 -------------
 Temporal patterns differ from versioning patterns (such as [dm-is-versioned](https://github.com/datamapper/dm-is-versioned))
 in that every version of the temporal properties is a peer (even the most recent).  Accessing temporal properties without the `at(time)` method
-is just a convinience for `at(DateTime.now)`.
+is just a convinience for `at(DateTime.now)`. Furthermore, a reference to a temporal object doesn't have to change when
+the state of the temporal object changes.  This is due to the continuity table (my_models) illustrated below.
 
 In addition, you have the ability inject versions at previous time-states (modifying history).
 
