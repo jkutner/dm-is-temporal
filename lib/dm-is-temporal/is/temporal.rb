@@ -214,7 +214,7 @@ module DataMapper
           def __versions_for_context__(temporal_list_name, context=DateTime.now)
             @__at__ ||= context
             t = self.__send__(temporal_list_name).select do |n|
-              (t.nil? or n.updated_at > t.updated_at) and n.updated_at <= @__at__
+              (t.nil? or n.updated_at > t.updated_at) and n.updated_at <= @__at__ and (n.deleted_at.nil? or (n.deleted_at > @__at__))
             end
             @__at__ = nil
             t
@@ -266,26 +266,6 @@ module DataMapper
           end
         RUBY
       end
-#
-#      def create_temporal_list_writer(name, private_name)
-#        class_eval <<-RUBY
-#          def #{name}=(x)
-#            at = @__at__
-#            versions = __versions_for_context__
-#            versions.each do
-#            if t.nil?
-#              t = TemporalVersion.create(:updated_at => at)
-#              temporal_versions << t
-#            elsif t.updated_at != at
-#              t = TemporalVersion.create(t.attributes.merge(:id => nil, :updated_at => at))
-#              temporal_versions << t
-#            end
-#            t.#{name} = x
-#            self.save
-#            x
-#          end
-#        RUBY
-#      end
 
       class TemporalProxy
         # make this a blank slate
@@ -320,7 +300,9 @@ module DataMapper
         end
 
         def clear
-          raise "Unsupported method"
+          @base_object.send(@temporal_list_name).each do |temporal|
+            temporal.deleted_at = @context
+          end
         end
 
         def []=(x,y)
@@ -340,15 +322,25 @@ module DataMapper
         end
 
         def delete(obj)
-          raise "Unsupported method"
+          @base_object.send(@temporal_list_name).each do |temporal|
+            if temporal.send(@name) == obj
+              temporal.deleted_at = @context
+              return true
+            end
+          end
         end
 
         def delete_at(i)
+          # probably won't ever support this - not really doing order
           raise "Unsupported method"
         end
 
         def delete_if
-          raise "Unsupported method"
+          @base_object.send(@temporal_list_name).each do |temporal|
+            if yield(temporal.send(@name))
+              temporal.deleted_at = @context
+            end
+          end
         end
 
         def drop(i)
@@ -376,7 +368,9 @@ module DataMapper
         end
 
         def pop(n=nil)
-          raise "Unsupported method"
+          temporal = @base_object.send(@temporal_list_name).last
+          temporal.deleted_at = @context
+          temporal.send(@name)
         end
 
         def push(*obj)
