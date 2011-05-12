@@ -7,8 +7,7 @@ module Assoc
     property :id, Serial
     property :baz, String
 
-    # todo bi-direction temporal relationships
-  #  belongs_to :my_model
+    belongs_to :my_model
   end
 
   class MyModel
@@ -60,6 +59,8 @@ describe DataMapper::Is::Temporal do
         subject.foobars.should include(f)
 
         subject.instance_eval { self.temporal_foobars.size.should == 1}
+
+        f.my_model.should == subject
       end
 
       it "adds a couple Foobars at different times" do

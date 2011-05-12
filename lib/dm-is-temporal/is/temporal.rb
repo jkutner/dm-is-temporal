@@ -292,10 +292,16 @@ module DataMapper
           @temporal_list_model = temporal_list_model
           @name = name
           @context = context
+
+          @bidirectional_method = DataMapper::Inflector.singularize(
+              DataMapper::Inflector.tableize(base_object.class.name.split('::').last))
         end
 
         def <<(x)
           new_model = @temporal_list_model.create(:updated_at => @context, @name => x)
+          if x.respond_to?("#{@bidirectional_method}=")
+            x.send("#{@bidirectional_method}=", @base_object)
+          end
           @base_object.send(@temporal_list_name) << new_model
         end
 
@@ -367,14 +373,16 @@ module DataMapper
           raise "Unsupported method"
         end
 
-        def pop(n=nil)
+        def pop
           temporal = @base_object.send(@temporal_list_name).last
           temporal.deleted_at = @context
           temporal.send(@name)
         end
 
         def push(*obj)
-          raise "Unsupported method"
+          obj.each do |o|
+            self.<< o
+          end
         end
 
         def rehject!

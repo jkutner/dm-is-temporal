@@ -137,7 +137,6 @@ TODO
 ------
 
 +  MyClass.update (update all records for a model) doesn't work
-+  Bi-directional Temporal Associations
 +  Temporal Property pattern (i.e. multiple independent temporal properties per class)
 +  Bi-temporality
 +  Add a config flag that enables an error to be raised when attempting to rewrite existing versions
