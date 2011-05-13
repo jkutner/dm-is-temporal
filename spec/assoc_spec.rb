@@ -10,6 +10,14 @@ module Assoc
     belongs_to :my_model
   end
 
+  class ThreeFoobar
+    include DataMapper::Resource
+    property :id, Serial
+    property :version, DateTime
+    belongs_to :foobar
+    belongs_to :my_model_three
+  end
+
   class MyModel
     include DataMapper::Resource
 
@@ -31,12 +39,24 @@ module Assoc
       has n, :foobazes, 'Foobar'
     end
   end
+
+  class MyModelThree
+    include DataMapper::Resource
+
+    property :id, Serial
+
+    is_temporal do
+      property :name, String
+      has n, :three_foobars
+    end
+  end
 end
 
 describe DataMapper::Is::Temporal do
 
   before(:all) do
-    DataMapper.setup(:default, "sqlite3::memory:")
+#    DataMapper.setup(:default, "sqlite3::memory:")
+    DataMapper.setup(:default, "postgres://localhost/dm_is_temporal")
     DataMapper.setup(:test, "sqlite3::memory:")
   end
   
@@ -258,6 +278,26 @@ describe DataMapper::Is::Temporal do
 
         subject.at(now).foobazes.size.should == 2
         subject.instance_eval { self.temporal_foobazes.size.should == 2}
+      end
+    end
+
+    context "with join class" do
+      subject do
+        Assoc::MyModelThree.create
+      end
+
+      it "adds a Foobar at the current time" do
+        f = Assoc::Foobar.create(:baz => "hello")
+        join = Assoc::ThreeFoobar.create(:foobar => f)
+        subject.three_foobars << join
+        subject.save
+        subject.three_foobars.size.should == 1
+        subject.three_foobars.should include(join)
+
+        subject.instance_eval { self.temporal_three_foobars.size.should == 1}
+
+        x = DataMapper.repository(:default).adapter.select("select * from assoc_my_model_three_temporal_three_foobars")
+        puts "x=#{x.inspect}"
       end
     end
   end

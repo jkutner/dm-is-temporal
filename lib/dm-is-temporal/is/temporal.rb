@@ -303,6 +303,7 @@ module DataMapper
             x.send("#{@bidirectional_method}=", @base_object)
           end
           @base_object.send(@temporal_list_name) << new_model
+          @list << x
         end
 
         def clear
