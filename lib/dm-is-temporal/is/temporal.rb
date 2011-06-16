@@ -193,7 +193,7 @@ module DataMapper
 
           def self.__select_temporal_options__(options={})
             props = TemporalVersion.properties.map {|p| p.name}
-            temporal_opts = options.
+            temporal_opts = options.to_hash.
                 select {|k,v| props.include?(k)}.
                 inject({}) {|a,b| a.merge({b[0] => b[1]}) }
             return temporal_opts
