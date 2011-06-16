@@ -55,8 +55,8 @@ end
 describe DataMapper::Is::Temporal do
 
   before(:all) do
-#    DataMapper.setup(:default, "sqlite3::memory:")
-    DataMapper.setup(:default, "postgres://localhost/dm_is_temporal")
+    DataMapper.setup(:default, "sqlite3::memory:")
+#    DataMapper.setup(:default, "postgres://localhost/dm_is_temporal")
     DataMapper.setup(:test, "sqlite3::memory:")
   end
   
