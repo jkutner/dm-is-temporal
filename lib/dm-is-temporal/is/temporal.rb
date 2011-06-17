@@ -161,8 +161,10 @@ module DataMapper
             options.delete_if {|k,v| t_opts.keys.include?(k) }
 
             base = super(options)
-            base.temporal_versions << TemporalVersion.create(t_opts) if t_opts.size > 0
-            base.save
+            if base.save and t_opts.size > 0
+              base.temporal_versions << TemporalVersion.create(t_opts)
+              base.save
+            end
             base
           end
 
