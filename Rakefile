@@ -4,7 +4,7 @@ begin
 
   Jeweler::Tasks.new do |gem|
     gem.name        = 'dm-is-temporal'
-    gem.version     = '0.7.1'
+    gem.version     = '0.7.2'
     gem.summary     = 'DataMapper plugin implementing temporal patterns'
     gem.description = gem.summary
     gem.email       = 'jpkutner [a] gmail [d] com'
