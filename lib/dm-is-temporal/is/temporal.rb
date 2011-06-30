@@ -191,6 +191,11 @@ module DataMapper
             self.save
           end
 
+          def temporal_version_id(context=DateTime.now)
+            t = __version_for_context__(context)
+            t.nil? ? nil : t.id
+          end
+
           private
 
           def self.__select_temporal_options__(options={})
